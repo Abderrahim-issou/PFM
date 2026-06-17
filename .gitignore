@@ -14,10 +14,7 @@ model-ai/.env
 # Uploads / generated files
 backend/app/uploads/
 
-# AI models
-*.pt
-*.pth
-*.onnx
+
 
 # Node
 node_modules/
