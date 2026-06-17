@@ -31,3 +31,7 @@ build/
 .idea/
 .DS_Store
 Thumbs.db
+
+backend/app.db
+model-ai/trained_models/
+commit_files.ps1
