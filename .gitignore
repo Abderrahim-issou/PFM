@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+venv/
+.venv/
+
+# Env
+.env
+.env.*
+model-ai/.env
+
+# Uploads / generated files
+backend/app/uploads/
+
+# AI models
+*.pt
+*.pth
+*.onnx
+
+# Node
+node_modules/
+
+# Build
+dist/
+build/
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
