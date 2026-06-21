@@ -7,12 +7,15 @@ import Login from './pages/Login'
 import Signup from './pages/Signup'
 import PlayGroundCheck from './pages/PlayGroundCheck'
 import ProtectedRoute from './components/Protected_Routes'
+import TrackingPage from "./pages/Tracking_Page";
 
 const App = () => (
   <BrowserRouter>
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
+      <Route path="/tracking" element={<TrackingPage />} />
+
 
       <Route
         path="/"
