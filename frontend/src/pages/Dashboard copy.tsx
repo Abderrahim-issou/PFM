@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, use } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import TopBar from '../components/TopBar'
 import { process_image } from '../api/api'
 import useAuth from '../hooks/useAuth'
@@ -8,11 +8,6 @@ import {
   getInitials,
 } from '../utils/dashboardUtils'
 import {
-  createTrackedPlant,
-  getTrackedPlants,
-  getTrackedPlantDetails,
-  scanTrackedPlant,
-  deleteTrackedPlant,
   getMyProfile,
   updateMyProfile,
   getDiagnosticHistory,
@@ -22,9 +17,6 @@ import type { AnalyticsOverview  } from "../types/Global";
 
 import type {
   DiagnosticHistoryItem,
-  TrackedPlant,
-  TrackedPlantDetails,
-  TrackingEntry,
   DiagnosticReport
 } from "../types/Global";
 import { useNavigate } from 'react-router-dom'
@@ -110,12 +102,6 @@ const Dashboard2 = () => {
   const [avatarInitials, setAvatarInitials] = useState('GP')
   
 
-  const [selectedTrackingPlantId, setSelectedTrackingPlantId] = useState<number | null>(null);
-  const [trackedPlants, setTrackedPlants] = useState<TrackedPlant[]>([]);
-  const [selectedTrackingDetails, setSelectedTrackingDetails] = useState<TrackedPlantDetails | null>(null);
-  const [trackingFile, setTrackingFile] = useState<File | null>(null);
-  const [trackingLoading, setTrackingLoading] = useState(false);
-  const [latestTrackingEntry, setLatestTrackingEntry] = useState<TrackingEntry | null>(null);
 
   // analytics 
   const [analyticsOverview, setAnalyticsOverview] =
@@ -230,105 +216,6 @@ const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     setScanning(false)
   }
 }
-
-
-const loadTrackedPlants = async () => {
-  if (!access_token) return;
-
-  try {
-    setTrackingLoading(true);
-    const response = await getTrackedPlants(access_token);
-    setTrackedPlants(response.data);
-  } catch (error) {
-    console.error("Failed to load tracked plants:", error);
-  } finally {
-    setTrackingLoading(false);
-  }
-};
-
-const loadTrackedPlantDetails = async (plantId: number) => {
-  if (!access_token) return;
-
-  try {
-    setTrackingLoading(true);
-    const response = await getTrackedPlantDetails(plantId, access_token);
-    setSelectedTrackingDetails(response.data);
-    setSelectedTrackingPlantId(plantId);
-  } catch (error) {
-    console.error("Failed to load tracked plant details:", error);
-  } finally {
-    setTrackingLoading(false);
-  }
-};
-
-const handleStartNewTracking = async () => {
-  if (!access_token) return;
-
-  const nextNumber = trackedPlants.length + 1;
-  const icons = ["🌱", "🌿", "🌾", "🌻", "🌲", "🪴"];
-  const newIcon = icons[(nextNumber - 1) % icons.length];
-
-  try {
-    setTrackingLoading(true);
-
-    const response = await createTrackedPlant(
-      {
-        name: `Plant ${nextNumber}`,
-        icon: newIcon,
-      },
-      access_token
-    );
-
-    const newPlant = response.data;
-
-    setTrackedPlants((prev) => [newPlant, ...prev]);
-    setSelectedTrackingPlantId(newPlant.id);
-    await loadTrackedPlantDetails(newPlant.id);
-  } catch (error) {
-    console.error("Failed to create tracked plant:", error);
-  } finally {
-    setTrackingLoading(false);
-  }
-};
-
-const handleScanTrackedPlant = async () => {
-  if (!access_token || !selectedTrackingPlantId || !trackingFile) return;
-
-  const formData = new FormData();
-  formData.append("file", trackingFile);
-
-  try {
-    setTrackingLoading(true);
-
-    const response = await scanTrackedPlant(
-      selectedTrackingPlantId,
-      formData,
-      access_token
-    );
-
-    setLatestTrackingEntry(response.data);
-    await loadTrackedPlants();
-    await loadTrackedPlantDetails(selectedTrackingPlantId);
-  } catch (error) {
-    console.error("Failed to scan tracked plant:", error);
-  } finally {
-    setTrackingLoading(false);
-  }
-};
-
-
-useEffect(() => {
-  if (activeTab === "tracking") {
-    loadTrackedPlants();
-  }
-}, [activeTab, access_token]);
-
-
-
-
-
-
-
 
 
   // Greeting helper
@@ -504,34 +391,7 @@ const outbreakPath = useMemo(() => {
   return buildChartPath(monthlyChartStats, 'outbreakScore')
 }, [monthlyChartStats])
 
-const handleDeleteTrackedPlant = async () => {
-  if (!access_token || !selectedTrackingPlantId) return
 
-  const confirmed = window.confirm(
-    'Are you sure you want to delete this tracked plant?'
-  )
-
-  if (!confirmed) return
-
-  try {
-    setTrackingLoading(true)
-
-    await deleteTrackedPlant(selectedTrackingPlantId, access_token)
-
-    setTrackedPlants(prev =>
-      prev.filter(plant => plant.id !== selectedTrackingPlantId)
-    )
-
-    setSelectedTrackingPlantId(null)
-    setSelectedTrackingDetails(null)
-    setLatestTrackingEntry(null)
-    setTrackingFile(null)
-  } catch (error) {
-    console.error('Failed to delete tracked plant:', error)
-  } finally {
-    setTrackingLoading(false)
-  }
-}
 
   return (
     <div className="shell">
@@ -746,7 +606,7 @@ const handleDeleteTrackedPlant = async () => {
                     </svg>
                     <div>
                       <span className="label">Classifier Confidence</span>
-                      <p style={{ fontSize: '14px', color: 'var(--text)', fontWeight: '700' }}>ResNet50 Softmax Match</p>
+                      <p style={{ fontSize: '14px', color: 'var(--text)', fontWeight: '700' }}>Efficientnet Softmax Match</p>
                       <p style={{ fontSize: '11px', color: 'var(--muted)' }}>Weight validation checks cleared.</p>
                     </div>
                   </div>
@@ -1158,306 +1018,43 @@ const handleDeleteTrackedPlant = async () => {
           </section>
         )}
         
-        {activeTab === 'tracking' && (
+       {activeTab === 'tracking' && (
   <section className="glass-card animate-fade-in">
-    <h3 style={{ marginBottom: '20px' }}>Researcher Node Tracking</h3>
+    <div
+      style={{
+        minHeight: '420px',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        textAlign: 'center',
+        padding: '40px',
+      }}
+    >
+      <span style={{ fontSize: '56px', marginBottom: '20px' }}>👁️</span>
 
-    <div className="profile-settings-layout">
-      {/* Plants List Column */}
-      <div
-        className="profile-avatar-upload"
+      <h3 style={{ marginBottom: '12px' }}>Plant Disease Tracking</h3>
+
+      <p
         style={{
-          background: 'rgba(16, 185, 129, 0.02)',
-          borderRadius: '20px',
-          border: '1px solid var(--card-border)',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '12px',
-          alignItems: 'stretch',
+          color: 'var(--muted)',
+          maxWidth: '460px',
+          lineHeight: 1.7,
+          marginBottom: '28px',
         }}
       >
-        <h4 style={{ marginBottom: '8px', textAlign: 'center' }}>
-          Tracked Subjects
-        </h4>
+        Track your plants over time, compare new scans with previous diagnoses,
+        view health evolution graphs, and monitor disease progression from the
+        dedicated tracking dashboard.
+      </p>
 
-        {trackingLoading && (
-          <p style={{ textAlign: 'center', color: 'var(--muted)' }}>
-            Loading tracking data...
-          </p>
-        )}
-
-        {trackedPlants.length > 0 ? (
-          trackedPlants.map((plant) => (
-            <div
-              key={plant.id}
-              className={`glass-card ${
-                selectedTrackingPlantId === plant.id ? 'active' : ''
-              }`}
-              style={{
-                padding: '16px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                cursor: 'pointer',
-                transition: 'all 0.3s ease',
-                borderColor:
-                  selectedTrackingPlantId === plant.id
-                    ? 'var(--primary)'
-                    : 'var(--card-border)',
-              }}
-              onClick={() => loadTrackedPlantDetails(plant.id)}
-            >
-              <span style={{ fontSize: '24px' }}>{plant.icon || '🌱'}</span>
-
-              <div>
-                <span style={{ fontWeight: 600 }}>{plant.name}</span>
-                <p style={{ fontSize: '11px', color: 'var(--muted)' }}>
-                  {plant.current_disease || 'No scan yet'}{' '}
-                  {plant.current_health !== null
-                    ? `• ${plant.current_health}% health`
-                    : ''}
-                </p>
-              </div>
-            </div>
-          ))
-        ) : (
-          !trackingLoading && (
-            <p style={{ textAlign: 'center', color: 'var(--muted)' }}>
-              No tracked plants yet.
-            </p>
-          )
-        )}
-
-        <button
-          className="primary"
-          type="button"
-          onClick={handleStartNewTracking}
-          disabled={trackingLoading}
-          style={{ marginTop: '12px' }}
-        >
-          + Start new tracking
-        </button>
-      </div>
-
-      {/* Details column */}
-      <div className="profile-fields-card">
-        {selectedTrackingDetails ? (
-          <div
-            className="glass-card animate-fade-in"
-            style={{
-              padding: '32px',
-              height: '100%',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '20px',
-            }}
-          >
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '64px', marginBottom: '12px' }}>
-                {selectedTrackingDetails.icon || '🌱'}
-              </div>
-
-              <h2 style={{ marginBottom: '8px', fontSize: '28px' }}>
-                {selectedTrackingDetails.name} Analysis
-              </h2>
-
-              <p style={{ color: 'var(--muted)', fontSize: '14px' }}>
-                Current disease:{' '}
-                <strong style={{ color: 'var(--text)' }}>
-                  {selectedTrackingDetails.current_disease || 'No scan yet'}
-                </strong>
-              </p>
-
-              <p style={{ color: 'var(--muted)', fontSize: '14px' }}>
-                Current health:{' '}
-                <strong style={{ color: 'var(--text)' }}>
-                  {selectedTrackingDetails.current_health !== null
-                    ? `${selectedTrackingDetails.current_health}%`
-                    : 'Not available'}
-                </strong>
-              </p>
-            </div>
-
-            {/* Upload scan */}
-            <div
-              style={{
-                border: '2px dashed rgba(16, 185, 129, 0.2)',
-                borderRadius: '20px',
-                padding: '24px',
-                textAlign: 'center',
-                background: 'rgba(16, 185, 129, 0.02)',
-              }}
-            >
-              <h4 style={{ marginBottom: '12px' }}>Upload New Tracking Scan</h4>
-
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => setTrackingFile(e.target.files?.[0] || null)}
-              />
-
-              <br />
-
-              <button
-                className="primary"
-                type="button"
-                onClick={handleScanTrackedPlant}
-                disabled={trackingLoading || !trackingFile}
-                style={{ marginTop: '16px' }}
-              >
-                Scan This Plant
-              </button>
-            </div>
-
-            {/* Latest progress */}
-            {latestTrackingEntry && (
-              <div className="glass-card" style={{ padding: '20px' }}>
-                <h4 style={{ marginBottom: '8px' }}>
-                  Latest Progress: {latestTrackingEntry.progress_status}
-                </h4>
-
-                <p style={{ color: 'var(--muted)', lineHeight: '1.6' }}>
-                  {latestTrackingEntry.progress_message}
-                </p>
-
-                <p style={{ marginTop: '8px' }}>
-                  Health score:{' '}
-                  <strong>{latestTrackingEntry.health}%</strong>
-                </p>
-              </div>
-            )}
-
-            {/* Timeline */}
-            <div>
-              <h4 style={{ marginBottom: '12px' }}>Tracking Timeline</h4>
-
-              {selectedTrackingDetails.tracking_entries.length > 0 ? (
-                <div style={{ display: 'grid', gap: '12px' }}>
-                  {selectedTrackingDetails.tracking_entries.map((entry) => (
-                    <div
-                      key={entry.id}
-                      className="glass-card"
-                      style={{ padding: '16px' }}
-                    >
-                      <div
-                        style={{
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          gap: '12px',
-                          flexWrap: 'wrap',
-                        }}
-                      >
-                        <strong>{entry.progress_status || 'Scan'}</strong>
-
-                        <span style={{ color: 'var(--muted)', fontSize: '12px' }}>
-                          {new Date(entry.created_at).toLocaleDateString(
-                            'en-US',
-                            {
-                              month: 'short',
-                              day: 'numeric',
-                              year: 'numeric',
-                            }
-                          )}
-                        </span>
-                      </div>
-
-                      <p
-                        style={{
-                          color: 'var(--muted)',
-                          fontSize: '13px',
-                          marginTop: '8px',
-                        }}
-                      >
-                        {entry.progress_message}
-                      </p>
-
-                      <p style={{ fontSize: '13px', marginTop: '8px' }}>
-                        Disease:{' '}
-                        <strong>
-                          {entry.diagnostic_report?.disease || 'Unknown'}
-                        </strong>{' '}
-                        • Health: <strong>{entry.health}%</strong>
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p style={{ color: 'var(--muted)' }}>
-                  No scans yet. Upload the first image to start tracking progress.
-                </p>
-              )}
-            </div>
-
-            <button
-              className="secondary"
-              onClick={() => {
-                setSelectedTrackingPlantId(null);
-                setSelectedTrackingDetails(null);
-                setLatestTrackingEntry(null);
-                setTrackingFile(null);
-              }}
-              style={{ alignSelf: 'center', marginTop: '12px' }}
-              type="button"
-            >
-              Close Tracking View
-            </button>
-            <button
-                className="secondary"
-                onClick={handleDeleteTrackedPlant}
-                disabled={trackingLoading}
-                style={{ alignSelf: 'center', marginTop: '8px' }}
-                type="button"
-            > 
-             Delete Tracked Plant
-            </button>
-          </div>
-        ) : (
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              height: '100%',
-              padding: '40px',
-              border: '2px dashed rgba(16, 185, 129, 0.2)',
-              borderRadius: '20px',
-              background: 'rgba(16, 185, 129, 0.02)',
-            }}
-          >
-            <span style={{ fontSize: '48px', marginBottom: '20px', opacity: 0.5 }}>
-              👁️
-            </span>
-
-            <h3 style={{ color: 'var(--text)', marginBottom: '12px' }}>
-              Select a Plant to Track
-            </h3>
-
-            <p
-              style={{
-                color: 'var(--muted)',
-                textAlign: 'center',
-                marginBottom: '32px',
-                maxWidth: '300px',
-                lineHeight: '1.6',
-              }}
-            >
-              Choose one of the tracked plants from the list to view growth
-              progression, diagnosis history, and progress comparison.
-            </p>
-
-            <button
-              className="primary"
-              type="button"
-              onClick={handleStartNewTracking}
-              disabled={trackingLoading}
-            >
-              + Start new tracking
-            </button>
-            
-          </div>
-        )}
-      </div>
+      <button
+        className="primary"
+        type="button"
+        onClick={() => navigate('/tracking')}
+      >
+        Open Tracking Dashboard →
+      </button>
     </div>
   </section>
 )}
