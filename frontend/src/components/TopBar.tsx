@@ -8,10 +8,9 @@ type TopBarProps = {
 }
 
 const TopBar = ({ showAuthButtons = true, showLogout = true }: TopBarProps) => {
-  const { setAuth } = useAuth()
+  const { user } = useAuth()
   const navigate = useNavigate()
   const [theme, setTheme] = useState<'dark' | 'light'>('dark')
-  const [showNotifications, setShowNotifications] = useState(false)
   const [notifications, setNotifications] = useState([
     {
       id: 1,
@@ -144,116 +143,8 @@ const TopBar = ({ showAuthButtons = true, showLogout = true }: TopBarProps) => {
           )}
         </button>
 
-        {/* Notifications Button */}
-        {true && (
-          <div style={{ position: 'relative' }}>
-            <button
-              className="icon-btn"
-              onClick={() => setShowNotifications(!showNotifications)}
-              title="Notifications"
-              type="button"
-            >
-              <svg
-                fill="none"
-                height="18"
-                stroke="currentColor"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                viewBox="0 0 24 24"
-                width="18"
-              >
-                <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0" />
-              </svg>
-              {unreadCount > 0 && <span className="badge-count">{unreadCount}</span>}
-            </button>
-
-            {showNotifications && (
-              <div
-                className="glass-card"
-                style={{
-                  position: 'absolute',
-                  top: '52px',
-                  right: '0',
-                  width: '320px',
-                  padding: '16px',
-                  zIndex: 200,
-                  boxShadow: '0 15px 35px rgba(0,0,0,0.3)',
-                  border: '1px solid var(--card-border)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '12px',
-                  borderRadius: '16px',
-                }}
-              >
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    borderBottom: '1px solid var(--card-border)',
-                    paddingBottom: '8px',
-                  }}
-                >
-                  <h4 style={{ fontSize: '14px', fontWeight: 700 }}>Notifications</h4>
-                  {unreadCount > 0 && (
-                    <button
-                      className="link"
-                      onClick={markAllAsRead}
-                      style={{ fontSize: '11px' }}
-                      type="button"
-                    >
-                      Mark all read
-                    </button>
-                  )}
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  {notifications.map(n => (
-                    <div
-                      key={n.id}
-                      style={{
-                        padding: '8px',
-                        borderRadius: '8px',
-                        background: n.unread ? 'rgba(16, 185, 129, 0.05)' : 'transparent',
-                        border: '1px solid rgba(16, 185, 129, 0.02)',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '2px',
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                        }}
-                      >
-                        <span
-                          style={{
-                            fontSize: '12px',
-                            fontWeight: 700,
-                            color: n.unread ? 'var(--primary)' : 'var(--text)',
-                          }}
-                        >
-                          {n.title}
-                        </span>
-                        <span style={{ fontSize: '10px', color: 'var(--muted)' }}>
-                          {n.time}
-                        </span>
-                      </div>
-                      <p style={{ fontSize: '11px', margin: 0, color: 'var(--text-secondary)' }}>
-                        {n.desc}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
         {/* Authenticated Actions */}
-        {true ? (
+        {user?.email ? (
           <>
             <button className="ghost" onClick={() => navigate('/dashboard')} type="button">
               <svg
