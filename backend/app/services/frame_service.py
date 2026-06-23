@@ -11,9 +11,9 @@ AI_SERVICE_URL = os.getenv('AI_SERVICE_URL');
 
 timeout = httpx.Timeout(
     connect=10.0,
-    read=120.0,
-    write=120.0,
-    pool=10.0,
+    read=200.0,
+    write=200.0,
+    pool=50.0,
 )
  
 
