@@ -87,7 +87,7 @@ const DetectedRegionsPlayground = ({
       <div style={{ maxWidth: "1280px", margin: "0 auto" }}>
         <header style={{ marginBottom: "28px" }}>
           <button
-            onClick={() => navigate("/")}
+            onClick={() => navigate("/dashboard")}
             style={{
               display: "flex",
               alignItems: "center",
