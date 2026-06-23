@@ -17,7 +17,6 @@ const AuthProvider = ({children}: { children: React.ReactNode}) => {
     useEffect(() => {
         try {
             const { accessToken, user } = getAuthFromStorage();
-            console.log('this is the info from local storage: ', accessToken, "", user);
             if (!accessToken || !user) {
                 setAuth(null);
                 setLoading(false);

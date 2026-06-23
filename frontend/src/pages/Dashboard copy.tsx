@@ -193,10 +193,8 @@ const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
       console.log('Process failed')
       return
     }
-    console.log('this is the full report: ', response.data);
 
     const dashboardReport = mapBackendReportToDashboard(response.data)
-    console.log('this is the repport from the backend ', dashboardReport)
     setCurrentReport(dashboardReport)
 
     setHistoryItems(prev => [

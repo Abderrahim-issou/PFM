@@ -46,7 +46,6 @@ const Login = () => {
         return;
       }
 
-      console.log('this is the user', data);
       saveAuthToStorage(data.access_token, data.user);
       setAuth({ user: data.user, access_token: data.access_token, loading: false });
       setBusy(false)
