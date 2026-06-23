@@ -11,29 +11,7 @@ const TopBar = ({ showAuthButtons = true, showLogout = true }: TopBarProps) => {
   const { user } = useAuth()
   const navigate = useNavigate()
   const [theme, setTheme] = useState<'dark' | 'light'>('dark')
-  const [notifications, setNotifications] = useState([
-    {
-      id: 1,
-      title: 'Alert: Grape Blight risk high',
-      desc: 'Humidity levels are favorable for black rot in grape.',
-      time: '10m ago',
-      unread: true,
-    },
-    {
-      id: 2,
-      title: 'Scan complete',
-      desc: 'Tomato crop analysis shows 97% confidence: Healthy.',
-      time: '2h ago',
-      unread: false,
-    },
-    {
-      id: 3,
-      title: 'Monthly report ready',
-      desc: 'Download your May crop statistics report now.',
-      time: '1d ago',
-      unread: false,
-    },
-  ])
+
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('agroai_theme') as 'dark' | 'light'
@@ -52,11 +30,7 @@ const TopBar = ({ showAuthButtons = true, showLogout = true }: TopBarProps) => {
     document.documentElement.setAttribute('data-theme', nextTheme)
   }
 
-  const markAllAsRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, unread: false })))
-  }
 
-  const unreadCount = notifications.filter(n => n.unread).length
 
   return (
     <nav className="topbar">

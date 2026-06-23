@@ -2,7 +2,6 @@ import { useParams } from "react-router-dom";
 import DetectedRegionsPlayground from "../components/Diagnostic_component";
 import { getDiagnosticReportById } from "../api/api";
 import useAuth from "../hooks/useAuth";
-import type { DiagnosticReport } from "../types/Global";
 
 import { useEffect, useState } from "react";
 

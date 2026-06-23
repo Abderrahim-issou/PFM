@@ -199,10 +199,12 @@ const TrackingPage = () => {
         : 0;
 
     const entries = selectedTrackingDetails?.tracking_entries ?? [];
+          
 
     const recoveryScore =
       entries.length >= 2
-        ? entries[entries.length - 1].health - entries[0].health
+        ? (entries[entries.length - 1].health ?? 0) -
+        (entries[0].health ?? 0)
         : 0;
 
     return {
