@@ -50,9 +50,7 @@ def register(
     response: Response, 
     db: Session = Depends(get_db)
 ): 
-    print('we are at the route')
     result = register_user(db=db,  first_name=data.first_name, last_name=data.last_name, email=data.email, password=data.password)
-    print('after the service route')
     if not result:
         return {"message": "Invalid credentials"}
 

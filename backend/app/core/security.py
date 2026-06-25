@@ -18,8 +18,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     return pwd_context.verify(plain_password,hashed_password);
 
 def verify_token(token: str):
-    print("SECRET:", SECRET_KEY)
-    print("ALGORITHM:", ALGORITHM)
+
     try:
         
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])

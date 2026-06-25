@@ -13,7 +13,6 @@ from app.utils.file_storage import save_original_image
 
 
 def calculate_health(severity: str) -> float:
-    print("this is the sevirity: ", severity);
     if severity == "Low":
         return 85.0
     if severity == "Medium":
@@ -25,7 +24,6 @@ def calculate_health(severity: str) -> float:
 
 
 def compare_progress(old_health: float | None, new_health: float):
-    print('this is the old health: ', old_health, "new health: ", new_health);
     if old_health is None:
         return "First Scan", "This is the first scan for this tracked plant."
 

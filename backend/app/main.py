@@ -8,8 +8,14 @@ from app.routers.process_image import router as process_route
 from app.routers.diagnostic_report import router as diagnostic_report_router
 from app.routers.tracking_route import router as tracking_router
 from app.routers.analytics import router as analytics_router
+from app.routers.internal_uploads_endpoints import router as internal_upload_router
 from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
+from app.schemas.diagnostic import DiagnosticReport
+from app.schemas.tracked import TrackedPlant
+from app.schemas.tracking import TrackingEntry
+from app.schemas.user import User
+
 import os
 from pathlib import Path
 
@@ -47,3 +53,4 @@ app.include_router(process_route);
 app.include_router(diagnostic_report_router)
 app.include_router(analytics_router)
 app.include_router(tracking_router)
+app.include_router(internal_upload_router)

@@ -18,7 +18,7 @@ async def predict(file: UploadFile = File(...)):
             )
 
         
-        result = predict_with_yolo(image_bytes)
+        result = await predict_with_yolo(image_bytes)
 
 
         return result

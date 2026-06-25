@@ -51,7 +51,6 @@ async def video_stream(websocket: WebSocket):
     
     await websocket.accept();
     
-    print("socket is on, Current user: ", user);
     
     try :
         while True:

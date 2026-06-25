@@ -20,7 +20,7 @@ import type {
   DiagnosticReport
 } from "../types/Global";
 import { useNavigate } from 'react-router-dom'
-
+import DiagnosisLoadingPopup from '../components/DiagnosisLoadingPopup'
 
 const cropDatabase: Record<string, DiagnosticReport> = {
   tomato_blight: {
@@ -393,6 +393,7 @@ const outbreakPath = useMemo(() => {
 
   return (
     <div className="shell">
+     <DiagnosisLoadingPopup open={scanning} />
       <div className="cyber-grid"></div>
       <TopBar showLogout />
 
