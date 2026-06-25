@@ -1,25 +1,16 @@
-import os
 import io
 import cv2
-import uuid
 import torch
 import numpy as np
-import tensorflow as tf
-from pathlib import Path
 import torch.nn.functional as F
 from PIL import Image, ImageDraw
 from torchvision import transforms
-from app.models.model_loader import get_model, get_resnet_model, get_efficientnet_model
+from app.models.model_loader import get_model, get_efficientnet_model
 from app.utils.strage_logic import save_image_to_backend_uploads
 from app.schemas.prediction_schema import PredictionOutput, DetectedItem
 import asyncio
 
 
-BACKEND_UPLOADS_DIR = Path("../../../backend/app/uploads").resolve()
-BOXED_DIR = BACKEND_UPLOADS_DIR / "boxed"
-CROPS_DIR = BACKEND_UPLOADS_DIR / "crops"
-GRADCAM_DIR = BACKEND_UPLOADS_DIR / "gradcam"
-RESNET_IMAGE_SIZE = (224, 224)
 EFFICIENTNET_IMAGE_SIZE = (380, 380)
 RESNET_EFFICIENTNET_CLASS_NAMES = [
     "Tomato__Bacterial_spot",
@@ -128,13 +119,8 @@ DISEASE_INFO = {
 
 
 
-def ensure_ai_output_dirs():
-    BOXED_DIR.mkdir(parents=True, exist_ok=True)
-    CROPS_DIR.mkdir(parents=True, exist_ok=True)
-    GRADCAM_DIR.mkdir(parents=True, exist_ok=True)
 
 async def predict_with_yolo(image_bytes: bytes):
-    ensure_ai_output_dirs()
 
     model = get_model()
 
@@ -288,148 +274,6 @@ async def predict_with_yolo(image_bytes: bytes):
         "regions": regions,
     }
 
-async def predict_with_yolo2(image_bytes: bytes):
-    ensure_ai_output_dirs()
-
-    model = get_model()
-
-    image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
-    image_width, image_height = image.size
-
-    results = model(image)
-    result = results[0]
-
-    names = result.names
-    boxes = result.boxes
-
-    if boxes is None or len(boxes) == 0:
-        return {
-            "success": False,
-            "message": "No leaves detected",
-            "boxed_image_url": None,
-            "regions": [],
-        }
-
-
-    boxed_image = image.copy()
-    draw = ImageDraw.Draw(boxed_image)
-
-    regions = []
-    disease_counts = {}
-    confidences = []
-    severities = []
-
-    severity_priority = {
-        "Low": 1,
-        "Medium": 2,
-        "High": 3,
-    }
-
-    for index, box in enumerate(boxes):
-        class_id = int(box.cls.item())
-        yolo_confidence = float(box.conf.item()) * 100
-        yolo_class_name = names[class_id]
-
-        x1, y1, x2, y2 = box.xyxy[0].tolist()
-
-        x1_int = max(0, int(x1))
-        y1_int = max(0, int(y1))
-        x2_int = min(image_width, int(x2))
-        y2_int = min(image_height, int(y2))
-
-        crop = image.crop((x1_int, y1_int, x2_int, y2_int))
-        
-        # resnet_result = predict_leaf_with_resnet(crop)
-        effecient_result = await predict_leaf_with_efficientnet(crop)
-
-        resnet_disease = effecient_result.get("disease") or yolo_class_name
-        resnet_confidence = effecient_result.get("confidence") or yolo_confidence
-        resnet_severity = effecient_result.get("severity") or "Low"
-
-        saved_crop = await save_image_to_backend_uploads(
-            image=crop,
-            folder="crops",
-            prefix=f"leaf_{index + 1}",
-            extension="jpg",
-        )
-
-        crop_url = saved_crop["url"]
-
-        draw.rectangle(
-            [(x1_int, y1_int), (x2_int, y2_int)],
-            outline="lime",
-            width=4,
-        )
-
-        draw.text(
-            (x1_int, max(0, y1_int - 18)),
-            f"{resnet_disease} {resnet_confidence:.1f}%",
-            fill="lime",
-        )
-
-        x = (x1 / image_width) * 100
-        y = (y1 / image_height) * 100
-        width = ((x2 - x1) / image_width) * 100
-        height = ((y2 - y1) / image_height) * 100
-
-        regions.append({
-            "id": index + 1,
-            "label": "leaf",
-            "confidence": round(yolo_confidence, 2),
-
-            "x": round(x, 2),
-            "y": round(y, 2),
-            "width": round(width, 2),
-            "height": round(height, 2),
-
-            "crop_url": crop_url,
-            "gradcam_url": effecient_result.get("gradcam_url"),
-
-            "disease": resnet_disease,
-            "severity": resnet_severity,
-            "diagnosis_confidence": round(resnet_confidence, 2),
-        })
-
-        disease_counts[resnet_disease] = disease_counts.get(resnet_disease, 0) + 1
-        confidences.append(resnet_confidence)
-        severities.append(resnet_severity)
-
-    saved_boxed = await save_image_to_backend_uploads(
-        image=boxed_image,
-        folder="boxed",
-        prefix="boxed",
-        extension="jpg",
-    )
-    boxed_image_url = saved_boxed["url"]
-
-    main_disease = max(disease_counts, key=disease_counts.get)
-
-    average_confidence = (
-        sum(confidences) / len(confidences)
-        if confidences
-        else 0
-    )
-
-    main_severity = (
-        max(
-            severities,
-            key=lambda severity: severity_priority.get(severity, 1)
-        )
-        if severities
-        else "Low"
-    )
-
-    return {
-        "success": True,
-        "message": "YOLO + ResNet prediction completed successfully",
-        "boxed_image_url": boxed_image_url,
-        "model_prediction": main_disease,
-        "plant": "Tomato",
-        "disease": main_disease,
-        "confidence": round(average_confidence, 2),
-        "severity": main_severity,
-        "regions": regions,
-    }
 
 async def predict_image(image_bytes: bytes):
     yolo_result = await predict_with_yolo(image_bytes)
@@ -478,19 +322,7 @@ async def predict_image(image_bytes: bytes):
 
         "regions": yolo_result["regions"],
     }
-    
-def preprocess_leaf_image_rais_net(image: Image.Image):
-    transform = transforms.Compose([
-        transforms.Resize(RESNET_IMAGE_SIZE),
-        transforms.ToTensor(),
-    ])
 
-    image = image.convert("RGB")
-    image_tensor = transform(image)
-
-    image_tensor = image_tensor.unsqueeze(0)
-
-    return image_tensor
 
 def preprocess_leaf_image_effeccient_Net(image: Image.Image):
     transform = transforms.Compose([
@@ -508,6 +340,7 @@ def preprocess_leaf_image_effeccient_Net(image: Image.Image):
 
     return image_tensor
 
+
 def get_disease_info(class_name: str):
     return DISEASE_INFO.get(
         class_name,
@@ -521,42 +354,6 @@ def get_disease_info(class_name: str):
         },
     )
 
-def predict_leaf_with_resnet(image: Image.Image):
-    model = get_resnet_model()
-
-    processed_image = preprocess_leaf_image_rais_net(image)
-
-    with torch.no_grad():
-        outputs = model(processed_image)
-        probabilities = F.softmax(outputs, dim=1)
-
-    confidence_tensor, class_index_tensor = torch.max(probabilities, dim=1)
-
-    class_index = int(class_index_tensor.item())
-    confidence = float(confidence_tensor.item()) * 100
-
-    class_name = RESNET_EFFICIENTNET_CLASS_NAMES[class_index]
-    disease_info = get_disease_info(class_name)
-
-    gradcam_url = generate_gradcam_rais_net(
-        model=model,
-        processed_image=processed_image,
-        original_image=image,
-        class_index=class_index,
-        last_conv_layer_name=None,
-    )
-
-    return {
-        "model_prediction": class_name,
-        "disease": disease_info["display_name"],
-        "confidence": round(confidence, 2),
-        "severity": disease_info["severity"],
-        "description": disease_info["description"],
-        "organic_cure": disease_info["organic_cure"],
-        "chemical_cure": disease_info["chemical_cure"],
-        "prevention": disease_info["prevention"],
-        "gradcam_url": gradcam_url,
-    }
 
 async def predict_leaf_with_efficientnet(image: Image.Image):
     model = get_efficientnet_model()
@@ -596,300 +393,7 @@ async def predict_leaf_with_efficientnet(image: Image.Image):
         "prevention": disease_info["prevention"],
         "gradcam_url": gradcam_url,
     }
-   
-def generate_gradcam_rais_net(
-    model,
-    processed_image,
-    original_image: Image.Image,
-    class_index: int,
-    last_conv_layer_name=None,
-):
-    model.eval()
 
-    gradients = []
-    activations = []
-
-    target_layer = model.layer4[-1]
-
-    def forward_hook(module, input, output):
-        activations.append(output)
-
-    def backward_hook(module, grad_input, grad_output):
-        gradients.append(grad_output[0])
-
-    forward_handle = target_layer.register_forward_hook(forward_hook)
-    backward_handle = target_layer.register_full_backward_hook(backward_hook)
-
-    output = model(processed_image)
-
-    model.zero_grad()
-
-    loss = output[0, class_index]
-    loss.backward()
-
-    grads = gradients[0]
-    acts = activations[0]
-
-    pooled_grads = torch.mean(grads, dim=[0, 2, 3])
-
-    for i in range(acts.shape[1]):
-        acts[:, i, :, :] *= pooled_grads[i]
-
-    heatmap = torch.mean(acts, dim=1).squeeze()
-    heatmap = F.relu(heatmap)
-
-    heatmap = heatmap.detach().cpu().numpy()
-
-    heatmap = heatmap / np.max(heatmap)
-
-    original = np.array(original_image.convert("RGB"))
-    original = cv2.resize(original, RESNET_IMAGE_SIZE)
-
-    heatmap = cv2.resize(heatmap, RESNET_IMAGE_SIZE)
-    heatmap = np.uint8(255 * heatmap)
-
-    heatmap_color = cv2.applyColorMap(heatmap, cv2.COLORMAP_JET)
-
-    overlay = cv2.addWeighted(original, 0.6, heatmap_color, 0.4, 0)
-
-    saved_gradcam = save_image_to_backend_uploads(
-        image=cv2.cvtColor(overlay, cv2.COLOR_RGB2BGR),
-        folder="gradcam",
-        prefix="gradcam",
-        extension="jpg",
-    )
-
-    forward_handle.remove()
-    backward_handle.remove()
-
-    return saved_gradcam["url"]
-
-async def generate_gradcam_efficientnet(
-    model,
-    processed_image,
-    original_image: Image.Image,
-    class_index: int,
-    last_conv_layer_name=None,
-):
-    model.eval()
-
-    gradients = []
-    activations = []
-
-    target_layer = model.conv_head
-
-    def forward_hook(module, input, output):
-        activations.append(output)
-
-    def backward_hook(module, grad_input, grad_output):
-        gradients.append(grad_output[0])
-
-    forward_handle = target_layer.register_forward_hook(forward_hook)
-    backward_handle = target_layer.register_full_backward_hook(backward_hook)
-
-    output = model(processed_image)
-
-    model.zero_grad()
-
-    loss = output[0, class_index]
-    loss.backward()
-
-    grads = gradients[0]
-    acts = activations[0]
-
-    pooled_grads = torch.mean(grads, dim=[0, 2, 3])
-
-    for i in range(acts.shape[1]):
-        acts[:, i, :, :] *= pooled_grads[i]
-
-    heatmap = torch.mean(acts, dim=1).squeeze()
-    heatmap = F.relu(heatmap)
-
-    heatmap = heatmap.detach().cpu().numpy()
-
-    if np.max(heatmap) != 0:
-        heatmap = heatmap / np.max(heatmap)
-
-    original = np.array(original_image.convert("RGB"))
-    original = cv2.resize(original, EFFICIENTNET_IMAGE_SIZE)
-
-    heatmap = cv2.resize(heatmap, EFFICIENTNET_IMAGE_SIZE)
-    heatmap = np.uint8(255 * heatmap)
-
-    heatmap_color = cv2.applyColorMap(heatmap, cv2.COLORMAP_JET)
-
-    overlay = cv2.addWeighted(original, 0.6, heatmap_color, 0.4, 0)
-
-    saved_gradcam = await save_image_to_backend_uploads(
-        image=cv2.cvtColor(overlay, cv2.COLOR_RGB2BGR),
-        folder="gradcam",
-        prefix="gradcam",
-        extension="jpg",
-    )
-
-    forward_handle.remove()
-    backward_handle.remove()
-
-    return saved_gradcam["url"]
-
-
-
-
-async def predict_with_yolo2(image_bytes: bytes):
-    ensure_ai_output_dirs()
-
-    model = get_model()
-
-    image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
-    image_width, image_height = image.size
-
-    results = model(image)
-    result = results[0]
-
-    names = result.names
-    boxes = result.boxes
-
-    if boxes is None or len(boxes) == 0:
-        return {
-            "success": False,
-            "message": "No leaves detected",
-            "boxed_image_url": None,
-            "regions": [],
-        }
-
-    boxed_image = image.copy()
-    draw = ImageDraw.Draw(boxed_image)
-
-    region_items = []
-    crop_upload_tasks = []
-
-    disease_counts = {}
-    confidences = []
-    severities = []
-
-    severity_priority = {
-        "Low": 1,
-        "Medium": 2,
-        "High": 3,
-    }
-
-    for index, box in enumerate(boxes):
-        class_id = int(box.cls.item())
-        yolo_confidence = float(box.conf.item()) * 100
-        yolo_class_name = names[class_id]
-
-        x1, y1, x2, y2 = box.xyxy[0].tolist()
-
-        x1_int = max(0, int(x1))
-        y1_int = max(0, int(y1))
-        x2_int = min(image_width, int(x2))
-        y2_int = min(image_height, int(y2))
-
-        crop = image.crop((x1_int, y1_int, x2_int, y2_int))
-
-        effecient_result = await predict_leaf_with_efficientnet(crop)
-
-        resnet_disease = effecient_result.get("disease") or yolo_class_name
-        resnet_confidence = effecient_result.get("confidence") or yolo_confidence
-        resnet_severity = effecient_result.get("severity") or "Low"
-
-        crop_upload_tasks.append(
-            save_image_to_backend_uploads(
-                image=crop,
-                folder="crops",
-                prefix=f"leaf_{index + 1}",
-                extension="jpg",
-            )
-        )
-
-        draw.rectangle(
-            [(x1_int, y1_int), (x2_int, y2_int)],
-            outline="lime",
-            width=4,
-        )
-
-        draw.text(
-            (x1_int, max(0, y1_int - 18)),
-            f"{resnet_disease} {resnet_confidence:.1f}%",
-            fill="lime",
-        )
-
-        x = (x1 / image_width) * 100
-        y = (y1 / image_height) * 100
-        width = ((x2 - x1) / image_width) * 100
-        height = ((y2 - y1) / image_height) * 100
-
-        region_items.append({
-            "id": index + 1,
-            "label": "leaf",
-            "confidence": round(yolo_confidence, 2),
-
-            "x": round(x, 2),
-            "y": round(y, 2),
-            "width": round(width, 2),
-            "height": round(height, 2),
-
-            "crop_url": None,
-            "gradcam_url": effecient_result.get("gradcam_url"),
-
-            "disease": resnet_disease,
-            "severity": resnet_severity,
-            "diagnosis_confidence": round(resnet_confidence, 2),
-        })
-
-        disease_counts[resnet_disease] = disease_counts.get(resnet_disease, 0) + 1
-        confidences.append(resnet_confidence)
-        severities.append(resnet_severity)
-
-    boxed_upload_task = save_image_to_backend_uploads(
-        image=boxed_image,
-        folder="boxed",
-        prefix="boxed",
-        extension="jpg",
-    )
-
-    crop_results, saved_boxed = await asyncio.gather(
-        asyncio.gather(*crop_upload_tasks),
-        boxed_upload_task,
-    )
-
-    regions = []
-
-    for region_item, saved_crop in zip(region_items, crop_results):
-        region_item["crop_url"] = saved_crop["url"]
-        regions.append(region_item)
-
-    boxed_image_url = saved_boxed["url"]
-
-    main_disease = max(disease_counts, key=disease_counts.get)
-
-    average_confidence = (
-        sum(confidences) / len(confidences)
-        if confidences
-        else 0
-    )
-
-    main_severity = (
-        max(
-            severities,
-            key=lambda severity: severity_priority.get(severity, 1)
-        )
-        if severities
-        else "Low"
-    )
-
-    return {
-        "success": True,
-        "message": "YOLO + ResNet prediction completed successfully",
-        "boxed_image_url": boxed_image_url,
-        "model_prediction": main_disease,
-        "plant": "Tomato",
-        "disease": main_disease,
-        "confidence": round(average_confidence, 2),
-        "severity": main_severity,
-        "regions": regions,
-    }
-    
     
 def estimate_severity_from_heatmap(heatmap):
     threshold = 0.6
