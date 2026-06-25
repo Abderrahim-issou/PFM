@@ -25,13 +25,15 @@ BASE_DIR = Path(__file__).resolve().parent
 
 UPLOADS_DIR = BASE_DIR / "uploads"
 
-ensure_upload_dirs();
 
 load_dotenv();
 
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI();
+
+ensure_upload_dirs();
+
 
 
 app.mount(
