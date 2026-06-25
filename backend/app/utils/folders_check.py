@@ -1,13 +1,11 @@
 from pathlib import Path
 
-
-BASE_DIR = Path(__file__).resolve().parent
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 UPLOADS_DIR = BASE_DIR / "uploads"
 
 
 def ensure_upload_dirs():
-
     folders = [
         UPLOADS_DIR,
         UPLOADS_DIR / "original",
