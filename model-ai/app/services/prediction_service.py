@@ -585,7 +585,6 @@ async def predict_leaf_with_efficientnet(image: Image.Image):
     gradcam_severity = gradcam_result["severity"]
     affected_area = gradcam_result["affected_area"]
     
-    print('this is the effected area', affected_area);
     return {
         "model_prediction": class_name,
         "disease": disease_info["display_name"],

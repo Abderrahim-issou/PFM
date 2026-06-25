@@ -24,7 +24,6 @@ async def predict(file: UploadFile = File(...)):
         return result
 
     except Exception as e:
-        print('error is here', e)
         raise HTTPException(
             status_code=500,
             detail=f"Prediction failed: {str(e)}"
