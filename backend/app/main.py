@@ -15,6 +15,7 @@ from app.schemas.diagnostic import DiagnosticReport
 from app.schemas.tracked import TrackedPlant
 from app.schemas.tracking import TrackingEntry
 from app.schemas.user import User
+from app.utils.folders_check import ensure_upload_dirs
 
 import os
 from pathlib import Path
@@ -24,7 +25,7 @@ BASE_DIR = Path(__file__).resolve().parent
 
 UPLOADS_DIR = BASE_DIR / "uploads"
 
-
+ensure_upload_dirs();
 
 load_dotenv();
 
