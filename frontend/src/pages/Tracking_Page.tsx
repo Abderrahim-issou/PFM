@@ -266,30 +266,38 @@ const TrackingPage = () => {
           </div>
 
           <div
-            style={{
-              display: "flex",
-              gap: "12px",
-              alignItems: "center",
-              flexWrap: "wrap",
-            }}
-          >
-            <button
-              className="secondary"
-              type="button"
-              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            >
-              {theme === "dark" ? "☀️ Light Mode" : "🌙 Dark Mode"}
-            </button>
+  style={{
+    display: "flex",
+    gap: "12px",
+    alignItems: "center",
+    flexWrap: "wrap",
+  }}
+>
+  <button
+    className="ghost"
+    type="button"
+    onClick={() => navigate("/dashboard")}
+  >
+    ← Back to Dashboard
+  </button>
 
-            <button
-              className="primary"
-              type="button"
-              onClick={handleStartNewTracking}
-              disabled={trackingLoading}
-            >
-              + Start New Plant Tracking
-            </button>
-          </div>
+  <button
+    className="secondary"
+    type="button"
+    onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+  >
+    {theme === "dark" ? "☀️ Light Mode" : "🌙 Dark Mode"}
+  </button>
+
+  <button
+    className="primary"
+    type="button"
+    onClick={handleStartNewTracking}
+    disabled={trackingLoading}
+  >
+    + Start New Plant Tracking
+  </button>
+</div>
         </div>
       </section>
 
@@ -332,14 +340,7 @@ const TrackingPage = () => {
         </div>
       </section>
 
-      <section
-        style={{
-          display: "grid",
-          gridTemplateColumns: "340px 1fr",
-          gap: "22px",
-          alignItems: "start",
-        }}
-      >
+      <section className="tracking-layout">
         <aside className="glass-card" style={{ padding: "22px" }}>
           <h3 style={{ marginBottom: "16px" }}>Tracked Plants</h3>
 
@@ -728,14 +729,7 @@ const TrackingPage = () => {
                           {entry.progress_message}
                         </p>
 
-                        <div
-                          style={{
-                            display: "grid",
-                            gridTemplateColumns: "repeat(3, 1fr)",
-                            gap: "12px",
-                            marginTop: "16px",
-                          }}
-                        >
+                        <div className="tracking-entry-grid">
                           <div>
                             <span className="label">Disease</span>
                             <p className="value">

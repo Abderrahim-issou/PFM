@@ -153,14 +153,7 @@ const DetectedRegionsPlayground = ({
           </p>
         </header>
 
-        <section
-          style={{
-            display: "grid",
-            gridTemplateColumns: "minmax(0, 1fr) 340px",
-            gap: "24px",
-            alignItems: "start",
-          }}
-        >
+        <section className="regions-playground-layout">
           <div
             style={{
               background: "rgba(15,23,42,0.82)",
@@ -433,13 +426,7 @@ const DetectedRegionsPlayground = ({
               </button>
             </div>
 
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr",
-                gap: "18px",
-              }}
-            >
+            <div className="regions-modal-image-grid">
               <ImagePanel
                 title="Leaf crop"
                 url={resolveImageUrl(selectedRegion.crop_url)}
@@ -451,14 +438,7 @@ const DetectedRegionsPlayground = ({
               />
             </div>
 
-            <div
-              style={{
-                marginTop: "20px",
-                display: "grid",
-                gridTemplateColumns: "repeat(3, 1fr)",
-                gap: "12px",
-              }}
-            >
+            <div className="regions-modal-info-grid">
               <InfoCard
                 label="Severity"
                 value={selectedRegion.severity}

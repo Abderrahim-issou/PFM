@@ -5,6 +5,7 @@ import TopBar from '../components/TopBar'
 import useAuth from "../hooks/useAuth"
 import { register } from '../api/api'
 import { saveAuthToStorage } from '../utils/authStorage'
+import toast from "react-hot-toast";
 
 const Signup = () => {
   const navigate = useNavigate()
@@ -16,26 +17,51 @@ const Signup = () => {
   const [message, setMessage] = useState('')
   const [errorMsg, setErrorMsg] = useState('')
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    setBusy(true)
-    setMessage('')
-    setErrorMsg('')
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  event.preventDefault();
 
-    window.setTimeout( async () => {
-      const data = await register({email, password, first_name: "jhon", last_name: "Doe"})
-      if (!data) {
-        console.log("login failed!");
-        return;
-      }
+  setBusy(true);
+  setMessage("");
+  setErrorMsg("");
 
-      saveAuthToStorage(data.access_token, data.user);
-      setAuth({ user: data.user, access_token: data.access_token, loading: false });
-      setBusy(false)
-      setMessage('Account initialized! Welcome to the AgroAI crop intelligence center.')
-      navigate('/');
-    }, 1100)
+  const toastId = toast.loading("Creating your account...");
+
+  try {
+    const data = await register({
+      email,
+      password,
+      first_name: "jhon",
+      last_name: "Doe",
+    });
+
+    if (!data) {
+      toast.error("Account creation failed. Please try again.", {
+        id: toastId,
+      });
+      return;
+    }
+
+    saveAuthToStorage(data.access_token, data.user);
+
+    setAuth({
+      user: data.user,
+      access_token: data.access_token,
+      loading: false,
+    });
+
+    toast.success("Account created successfully. Welcome to AgroAI!", {
+      id: toastId,
+    });
+
+    navigate("/");
+  } catch (error) {
+    toast.error("Unable to create your account. Please try again.", {
+      id: toastId,
+    });
+  } finally {
+    setBusy(false);
   }
+};
 
   return (
     <div className="shell">

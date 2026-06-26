@@ -5,6 +5,7 @@ import TopBar from '../components/TopBar'
 import { login as login2 } from '../api/api'
 import useAuth2 from '../hooks/useAuth'
 import { saveAuthToStorage } from '../utils/authStorage'
+import toast from "react-hot-toast";
 
 const Login = () => {
   const { setAuth } = useAuth2()
@@ -33,26 +34,44 @@ const Login = () => {
   // }
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    setBusy(true)
-    setMessage('')
-    setErrorMsg('')
+  event.preventDefault();
 
-    
-    window.setTimeout( async () => {
-      const data = await login2({ email, password });
-      if (!data) {
-        console.log("login failed!");
-        return;
-      }
+  setBusy(true);
+  setMessage("");
+  setErrorMsg("");
 
-      saveAuthToStorage(data.access_token, data.user);
-      setAuth({ user: data.user, access_token: data.access_token, loading: false });
-      setBusy(false)
-      setMessage('Successfully authenticated! Synchronizing secure workspace...')
-      navigate('/');
-    }, 1100)
+  const toastId = toast.loading("Verifying your credentials...");
+
+  try {
+    const data = await login2({ email, password });
+
+    if (!data) {
+      toast.error("Login failed. Please check your email and password.", {
+        id: toastId,
+      });
+      return;
+    }
+
+    saveAuthToStorage(data.access_token, data.user);
+    setAuth({
+      user: data.user,
+      access_token: data.access_token,
+      loading: false,
+    });
+
+    toast.success("Login successful. Welcome back!", {
+      id: toastId,
+    });
+
+    navigate("/");
+  } catch (error) {
+    toast.error("Login failed. Please try again.", {
+      id: toastId,
+    });
+  } finally {
+    setBusy(false);
   }
+};
 
   const handleForgotPassword = () => {
     if (!email) {

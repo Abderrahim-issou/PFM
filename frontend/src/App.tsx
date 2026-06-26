@@ -8,9 +8,42 @@ import Signup from './pages/Signup'
 import PlayGroundCheck from './pages/PlayGroundCheck'
 import ProtectedRoute from './components/Protected_Routes'
 import TrackingPage from "./pages/Tracking_Page";
+import { Toaster } from "react-hot-toast";
 
 const App = () => (
   <BrowserRouter>
+  <Toaster
+        position="top-right"
+        reverseOrder={false}
+        gutter={10}
+        toastOptions={{
+          duration: 3500,
+
+          style: {
+            background: "rgba(8, 15, 12, 0.95)",
+            color: "#ECFDF5",
+            border: "1px solid rgba(16,185,129,.35)",
+            borderRadius: "16px",
+            backdropFilter: "blur(18px)",
+            fontSize: "14px",
+            padding: "14px 16px",
+          },
+
+          success: {
+            iconTheme: {
+              primary: "#10B981",
+              secondary: "#fff",
+            },
+          },
+
+          error: {
+            iconTheme: {
+              primary: "#EF4444",
+              secondary: "#fff",
+            },
+          },
+        }}
+      />
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />

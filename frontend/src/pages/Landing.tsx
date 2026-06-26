@@ -48,19 +48,21 @@ const Landing = () => {
                 Explore Technology
               </button>
             </div>
-            <div className="hero-stats">
-              <div className="hero-stat-item">
-                <span className="num">98.7%</span>
-                <span className="desc">Model Precision</span>
-              </div>
-              <div className="hero-stat-item">
-                <span className="num">&lt; 2s</span>
-                <span className="desc">Analysis Speed</span>
-              </div>
-              <div className="hero-stat-item">
-                <span className="num">38+</span>
-                <span className="desc">Plant Diseases</span>
-              </div>
+            <div className="hero-stats hero-stats-cards">
+  <div className="hero-stat-item hero-stat-card">
+    <span className="num">98.7%</span>
+    <span className="desc">Model Precision</span>
+  </div>
+
+  <div className="hero-stat-item hero-stat-card">
+    <span className="num">&lt; 2s</span>
+    <span className="desc">Analysis Speed</span>
+  </div>
+
+  <div className="hero-stat-item hero-stat-card">
+    <span className="num">38+</span>
+    <span className="desc">Plant Diseases</span>
+  </div>
             </div>
           </div>
 
