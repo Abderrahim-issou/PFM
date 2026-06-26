@@ -1063,3 +1063,4 @@ const outbreakPath = useMemo(() => {
 }
 
 export default Dashboard2
+
