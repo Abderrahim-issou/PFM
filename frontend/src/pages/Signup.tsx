@@ -9,7 +9,10 @@ import toast from "react-hot-toast";
 
 const Signup = () => {
   const navigate = useNavigate()
-  const {setAuth} = useAuth();
+  const { setAuth } = useAuth()
+
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [rememberMe, setRememberMe] = useState(true)
@@ -18,50 +21,50 @@ const Signup = () => {
   const [errorMsg, setErrorMsg] = useState('')
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-  event.preventDefault();
+    event.preventDefault()
 
-  setBusy(true);
-  setMessage("");
-  setErrorMsg("");
+    setBusy(true)
+    setMessage('')
+    setErrorMsg('')
 
-  const toastId = toast.loading("Creating your account...");
+    const toastId = toast.loading("Creating your account...")
 
-  try {
-    const data = await register({
-      email,
-      password,
-      first_name: "jhon",
-      last_name: "Doe",
-    });
+    try {
+      const data = await register({
+        first_name: firstName.trim(),
+        last_name: lastName.trim(),
+        email: email.trim(),
+        password,
+      })
 
-    if (!data) {
-      toast.error("Account creation failed. Please try again.", {
+      if (!data) {
+        toast.error("Account creation failed. Please try again.", {
+          id: toastId,
+        })
+        return
+      }
+
+      saveAuthToStorage(data.access_token, data.user)
+
+      setAuth({
+        user: data.user,
+        access_token: data.access_token,
+        loading: false,
+      })
+
+      toast.success("Account created successfully. Welcome to AgroAI!", {
         id: toastId,
-      });
-      return;
+      })
+
+      navigate("/")
+    } catch (error) {
+      toast.error("Unable to create your account. Please try again.", {
+        id: toastId,
+      })
+    } finally {
+      setBusy(false)
     }
-
-    saveAuthToStorage(data.access_token, data.user);
-
-    setAuth({
-      user: data.user,
-      access_token: data.access_token,
-      loading: false,
-    });
-
-    toast.success("Account created successfully. Welcome to AgroAI!", {
-      id: toastId,
-    });
-
-    navigate("/");
-  } catch (error) {
-    toast.error("Unable to create your account. Please try again.", {
-      id: toastId,
-    });
-  } finally {
-    setBusy(false);
   }
-};
 
   return (
     <div className="shell">
@@ -69,7 +72,6 @@ const Signup = () => {
       <TopBar showAuthButtons={false} showLogout={false} />
 
       <main className="auth-layout animate-slide-up" style={{ position: 'relative', zIndex: 10 }}>
-        {/* HERO LEFT COLUMN */}
         <section className="auth-hero">
           <div className="glass-card hero-card">
             <p className="eyebrow">Sustainable Yield Systems</p>
@@ -79,7 +81,7 @@ const Signup = () => {
             <p style={{ fontSize: '15px' }}>
               Create your AgroAI Detect account to instantly unlock high-precision plant leaf analysis, historic trend logging, and automated regional alerts.
             </p>
-            
+
             <div className="stat-grid">
               <div>
                 <span className="stat">38+</span>
@@ -99,14 +101,13 @@ const Signup = () => {
           <div className="glass-card insight-card">
             <p className="insight-title">🌱 Membership Privileges</p>
             <ul style={{ paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <li style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>Uncapped high-resolution ResNet leaf scans.</li>
+              <li style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>Uncapped high-resolution AI leaf scans.</li>
               <li style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>Historical dashboard mapping crop health progress.</li>
-              <li style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>Automated soil, ventilation, and spray recipe logs.</li>
+              <li style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>Automated disease reports and plant tracking tools.</li>
             </ul>
           </div>
         </section>
 
-        {/* AUTH RIGHT PANEL */}
         <section className="auth-panel glass-card" style={{ height: 'fit-content' }}>
           <div className="auth-header">
             <h2>Create Account</h2>
@@ -114,6 +115,36 @@ const Signup = () => {
           </div>
 
           <form onSubmit={handleSubmit} className="auth-form">
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: '12px',
+              }}
+            >
+              <label>
+                First Name
+                <input
+                  type="text"
+                  placeholder="John"
+                  value={firstName}
+                  onChange={(event) => setFirstName(event.target.value)}
+                  required
+                />
+              </label>
+
+              <label>
+                Last Name
+                <input
+                  type="text"
+                  placeholder="Doe"
+                  value={lastName}
+                  onChange={(event) => setLastName(event.target.value)}
+                  required
+                />
+              </label>
+            </div>
+
             <label>
               Email Address
               <input
@@ -161,9 +192,9 @@ const Signup = () => {
                 'Create Account'
               )}
             </button>
-            
+
             <p className="form-hint" style={{ color: 'var(--text-secondary)' }}>
-              Already registered in our database? 
+              Already registered in our database?
               <button className="link" style={{ marginLeft: '6px' }} onClick={() => navigate('/login')} type="button">
                 Sign In Instead
               </button>

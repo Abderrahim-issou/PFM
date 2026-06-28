@@ -390,7 +390,6 @@ const outbreakPath = useMemo(() => {
 }, [monthlyChartStats])
 
 
-
   return (
     <div className="shell">
      <DiagnosisLoadingPopup open={scanning} />

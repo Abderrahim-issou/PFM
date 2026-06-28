@@ -43,7 +43,12 @@ def register_user(db: Session, first_name: str, last_name: str, email: str, pass
     db.commit();
     
     return {
-        "user": new_user,
+        "user": {
+            "id": new_user.id,
+            "first_name": new_user.first_name,
+            "last_name": new_user.last_name,
+            "email": new_user.email,
+        },
         "access_token": access_token,
         "refresh_token": refresh_token,
         "token_type": "bearer"
@@ -127,7 +132,12 @@ def login_user(db: Session, email: str, password: str):
     db.commit();
     
     return {
-        "user": user,
+         "user": {
+            "id": user.id,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "email": user.email,
+        },
         "access_token": access_token,
         "refresh_token": refresh_token
     }

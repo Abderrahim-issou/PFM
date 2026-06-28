@@ -51,7 +51,7 @@ const Login = () => {
       });
       return;
     }
-
+    console.log('the loged in data: ', data)
     saveAuthToStorage(data.access_token, data.user);
     setAuth({
       user: data.user,
